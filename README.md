@@ -1,13 +1,13 @@
 # SIMATKUL QA
 
-Repository dokumentasi & automation testing untuk **SIMATKUL** — sistem penjadwalan mata kuliah (menggantikan proses manual spreadsheet) untuk Departemen Teknik Elektro dan Informatika UGM.
+Repository dokumentasi & automation testing untuk **SIMATKUL** sistem penjadwalan mata kuliah (menggantikan proses manual spreadsheet) untuk Departemen Teknik Elektro dan Informatika UGM.
 
 Repo ini dikelola oleh QA Automation sebagai bagian dari tim capstone (PM, Backend, Frontend, UI/UX, QA) yang bekerja secara paralel per sprint mingguan.
 
 ## Status
 
-🟡 **Test Case Documentation** — in progress
-⚪ **Test Automation (Playwright)** — belum dimulai, menunggu progress Backend/Frontend
+🟡 **Test Case Documentation** : in progress
+⚪ **Test Automation (Playwright)** : belum dimulai, menunggu progress Backend/Frontend
 
 ## Struktur Repo
 
