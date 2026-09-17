@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/blob-report/
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Temp / downloaded test proof files
+/tmp/
+*.tmp
+
+# Excel lock files (kalau dibuka bersamaan)
+~$*.xlsx
