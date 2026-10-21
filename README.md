@@ -1,61 +1,88 @@
 # SIMATKUL QA
 
-Repository dokumentasi & automation testing untuk **SIMATKUL** sistem penjadwalan mata kuliah (menggantikan proses manual spreadsheet) untuk Departemen Teknik Elektro dan Informatika UGM.
+Repository automation testing untuk **SIMATKUL** — Sistem Informasi Pengaturan Mata Kuliah, Departemen Teknik Elektro dan Informatika UGM.
 
-Repo ini dikelola oleh QA Automation sebagai bagian dari tim capstone (PM, Backend, Frontend, UI/UX, QA) yang bekerja secara paralel per sprint mingguan.
+Dikelola oleh QA sebagai bagian dari tim capstone (PM, Backend, Frontend, UI/UX, QA).
 
 ## Status
 
-🟡 **Test Case Documentation** : in progress
-⚪ **Test Automation (Playwright)** : belum dimulai, menunggu progress Backend/Frontend
+| Layer | Tool | Jumlah TC | Status |
+|---|---|---|---|
+| 🖐️ Manual Testing | Screenshot / Observasi | 46 TC | ⏳ On Progress |
+| 🎭 UI Automation | Playwright | 32 TC | ✅ Scripts siap, menunggu BE |
+| 📮 API Testing | Postman | 79 TC | ✅ Collection siap |
+
+> ⚠️ Eksekusi test ditahan sementara karena BE (`simatkul-be.vercel.app`) sedang down.
 
 ## Struktur Repo
 
 ```
 simatkul-qa/
-├── docs/
-│   └── TestCase_Management_SIMATKUL.xlsx   # dokumentasi test case (functional, master data, penjadwalan, laporan, API)
-├── tests/                                   # (akan diisi setelah testing mulai)
-│   ├── e2e/                                 # Playwright UI automation (Page Object Model)
-│   └── api/                                 # Playwright/Postman API testing
-├── playwright.config.ts                     # (akan ditambahkan)
-└── .github/workflows/ci.yml                 # (akan ditambahkan)
+├── e2e/                                    # Playwright UI E2E Automation
+│   ├── helpers.ts                          # Login helper & shared utilities
+│   ├── auth.spec.ts                        # TC Auth (7 TC)
+│   ├── master-data-periode.spec.ts         # TC Periode Akademik (7 TC)
+│   └── master-data-detail.spec.ts          # TC MK, Ruangan, Dosen, Kelas, Sesi, Hak Akses (18 TC)
+├── postman/
+│   └── simatkul-postman-collection.json    # 79 API Test Case (Postman)
+├── playwright.config.ts                    # Konfigurasi Playwright
+├── package.json
+└── .gitignore
 ```
 
-## Dokumentasi Test Case
+> 📄 **Dokumen manual test case** (spreadsheet) tersimpan di Google Drive — tidak dimasukkan ke repo ini.
 
-Lihat [`docs/TestCase_Management_SIMATKUL.xlsx`](docs/TestCase_Management_SIMATKUL.xlsx) — berisi:
+## Environment
 
-- **Test Case** — functional test case per modul (Autentikasi, Master Data, Penjadwalan, Laporan)
-- **API Test Case** — test case level endpoint (masih draft/asumsi, menunggu kontrak API resmi dari BE)
-- **Bug Report** — pelaporan bug (kosong, karena development belum berjalan)
-- **Dashboard** & **Recap Test Case / Recap Bug** — rekap otomatis via formula
+| Variabel | Nilai |
+|---|---|
+| Base URL FE | `http://localhost:5173` |
+| Base URL BE | `https://simatkul-be.vercel.app` |
+| Admin credentials | `admin` / `admin123` |
 
-Baris berwarna kuning pada dokumen = asumsi yang masih perlu dikonfirmasi ke tim BE/FE/PM.
+## Cara Jalankan Playwright
+
+```bash
+# Install dependencies
+npm install
+npx playwright install chromium
+
+# Jalankan semua test
+npm test
+
+# Jalankan per modul
+npm run test:auth
+npm run test:master-data
+
+# Lihat laporan HTML
+npm run test:report
+
+# Mode visual (browser terlihat)
+npm run test:ui
+```
+
+> ⚠️ Pastikan FE dev server (`npm run dev`) sudah berjalan di `http://localhost:5173` sebelum test dijalankan. Playwright akan otomatis mendeteksi server yang sudah berjalan.
+
+## Cara Jalankan Postman
+
+1. Buka Postman
+2. Import `postman/simatkul-postman-collection.json`
+3. Jalankan collection (Run Collection)
 
 ## QA Stack
 
-| Area | Tools |
+| Area | Tool |
 |---|---|
-| Automation framework | Playwright |
-| Design pattern | Page Object Model (POM) |
-| Test documentation | Excel (Test Case & Bug Management) |
-| Scope | Functional (Manual), API Testing, UI Automation, Security Testing |
+| UI Automation | Playwright (TypeScript) |
+| API Testing | Postman |
+| Manual Testing | Google Sheets + Screenshot |
+| Browser | Chromium |
 
-## Cara Kerja
+## Commit Convention
 
-1. Test case didokumentasikan lebih dulu di `docs/` sebelum automation ditulis.
-2. Setiap kali melakukan testing, hasil (Passed/Failed) diupdate di file test case, dan perubahan di-push ke repo ini.
-3. Commit mengikuti format [Conventional Commits](https://www.conventionalcommits.org/), contoh:
-   ```
-   test(auth): implement TC-AUTH-002 negative login case
-   docs: update recap test case setelah revisi kontrak API
-   fix(api): update TC-API-JADWAL-002 sesuai kontrak API resmi
-   ```
-4. Bug yang ditemukan selama testing dicatat di tab **Bug Report** pada file test case.
-
-## Terkait
-
-- Backend: Express
-- Frontend: React/Next.js
-- QA stack independen dari keputusan tech stack BE/FE di atas.
+```
+test(auth): add TC-AUTO-AUTH-006 failed login case
+test(master-data): add periode akademik CRUD automation
+fix(e2e): update selector after FE component change
+docs: update test status after BE recovery
+```
