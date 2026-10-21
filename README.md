@@ -2,17 +2,14 @@
 
 Repository automation testing untuk **SIMATKUL** — Sistem Informasi Pengaturan Mata Kuliah, Departemen Teknik Elektro dan Informatika UGM.
 
-Dikelola oleh QA sebagai bagian dari tim capstone (PM, Backend, Frontend, UI/UX, QA).
 
 ## Status
 
 | Layer | Tool | Jumlah TC | Status |
 |---|---|---|---|
-| 🖐️ Manual Testing | Screenshot / Observasi | 46 TC | ⏳ On Progress |
-| 🎭 UI Automation | Playwright | 32 TC | ✅ Scripts siap, menunggu BE |
-| 📮 API Testing | Postman | 79 TC | ✅ Collection siap |
-
-> ⚠️ Eksekusi test ditahan sementara karena BE (`simatkul-be.vercel.app`) sedang down.
+| Manual Testing | Screenshot / Observasi | 46 TC | On Progress |
+| UI Automation | Playwright | 32 TC | On Progress |
+| API Testing | Postman | 79 TC | Done |
 
 ## Struktur Repo
 
@@ -29,8 +26,6 @@ simatkul-qa/
 ├── package.json
 └── .gitignore
 ```
-
-> 📄 **Dokumen manual test case** (spreadsheet) tersimpan di Google Drive — tidak dimasukkan ke repo ini.
 
 ## Environment
 
@@ -61,7 +56,7 @@ npm run test:report
 npm run test:ui
 ```
 
-> ⚠️ Pastikan FE dev server (`npm run dev`) sudah berjalan di `http://localhost:5173` sebelum test dijalankan. Playwright akan otomatis mendeteksi server yang sudah berjalan.
+> Pastikan FE dev server (`npm run dev`) sudah berjalan di `http://localhost:5173` sebelum test dijalankan. Playwright akan otomatis mendeteksi server yang sudah berjalan.
 
 ## Cara Jalankan Postman
 
