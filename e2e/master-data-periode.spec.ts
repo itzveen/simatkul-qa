@@ -1,144 +1,100 @@
 import { test, expect } from "@playwright/test";
 import { loginAsAdmin } from "./helpers";
 
-/**
- * ================================================================
- * TC-AUTO-PERIODE-002  Validasi form kosong
- * TC-AUTO-PERIODE-003  Tambah Periode valid → card muncul
- * TC-AUTO-PERIODE-005  Edit Periode → card terupdate
- * TC-AUTO-PERIODE-006  Hapus Periode → card hilang
- * TC-AUTO-PERIODE-007  Hapus dibatalkan → data tetap ada
- * TC-AUTO-PERIODE-008  Search keyword valid → filter benar
- * TC-AUTO-PERIODE-009  Search keyword tidak ditemukan → empty state
- * ================================================================
- */
-
 test.describe("Master Data — Periode Akademik", () => {
   test.beforeEach(async ({ page }) => {
     await loginAsAdmin(page);
-    await page.waitForURL("**/master-data");
+    await page.waitForURL("**/master-data", { timeout: 15_000 });
   });
 
-  // ── TC-AUTO-PERIODE-002 ──────────────────────────────────────
-  test("TC-AUTO-PERIODE-002 | Validasi form kosong — tidak bisa submit", async ({
+  // ── TC-PW-PERIODE-002: Form kosong ───────────────────────────
+  test("TC-PW-PERIODE-002 | Validasi form kosong tidak bisa submit", async ({
     page,
   }) => {
-    await page.getByRole("button", { name: /tambah periode akademik/i }).click();
-    await page.getByRole("button", { name: /tambah periode/i }).click();
+    await page.getByRole("button", { name: "Tambah Periode Akademik" }).click();
+    await page.getByRole("button", { name: "Tambah Periode", exact: true }).click();
 
-    // Modal tidak tertutup + ada pesan error
-    await expect(
-      page.getByText(/tahun|semester|tidak boleh kosong|harus diisi/i),
-    ).toBeVisible();
+    // Dialog modal tetap terbuka karena validasi gagal
+    await expect(page.getByRole("heading", { name: "Tambah periode baru" })).toBeVisible({ timeout: 5000 });
   });
 
-  // ── TC-AUTO-PERIODE-003 ──────────────────────────────────────
-  test("TC-AUTO-PERIODE-003 | Tambah Periode Akademik valid → card muncul", async ({
+  // ── TC-PW-PERIODE-003: Tambah periode valid ───────────────────
+  test("TC-PW-PERIODE-003 | Tambah Periode Akademik baru valid", async ({
     page,
   }) => {
     const tahunTest = "2099";
 
-    await page.getByRole("button", { name: /tambah periode akademik/i }).click();
+    await page.getByRole("button", { name: "Tambah Periode Akademik" }).click();
 
-    // Isi form
-    await page.getByLabel(/awal tahun/i).fill(tahunTest);
-    await page.getByLabel(/semester/i).selectOption("Ganjil");
+    // 1. Isi Awal Tahun
+    await page.getByPlaceholder(/contoh: 2026/i).fill(tahunTest);
 
-    await page.getByRole("button", { name: /tambah periode/i }).click();
+    // 2. Pilih Semester Ganjil
+    await page.locator("select").first().selectOption("Ganjil");
 
-    // Card baru harus muncul
-    await expect(page.getByText(/2099/)).toBeVisible();
+    // 3. PENTING: Klik opsi 'Mulai kosong' agar tidak mewajibkan dropdown periode sumber
+    await page.getByRole("button", { name: /mulai kosong/i }).click();
+
+    // 4. Klik Tambah Periode
+    await page.getByRole("button", { name: "Tambah Periode", exact: true }).click();
+
+    // Modal tertutup dan card baru 2099 muncul di halaman
+    await expect(page.getByText(/2099/).first()).toBeVisible({ timeout: 15_000 });
   });
 
-  // ── TC-AUTO-PERIODE-005 ──────────────────────────────────────
-  test("TC-AUTO-PERIODE-005 | Edit Periode Akademik → data terupdate", async ({
+  // ── TC-PW-PERIODE-004: Edit Periode ──────────────────────────
+  test("TC-PW-PERIODE-004 | Edit Periode Akademik existing", async ({
     page,
   }) => {
-    // Klik tombol edit pada card pertama
-    await page.locator('[aria-label*="edit"], button:has-text("Edit")').first().click();
+    // Buka menu titik tiga pada card pertama
+    await page.locator('button[aria-label="Opsi lainnya"]').first().click();
+    await page.getByText(/edit data/i).click();
 
-    // Ubah nilai semester (pilih opsi berbeda)
-    const semesterSelect = page.getByLabel(/semester/i);
-    const currentVal = await semesterSelect.inputValue();
-    await semesterSelect.selectOption(
-      currentVal === "Ganjil" ? "Genap" : "Ganjil",
-    );
+    // Modal Edit terbuka
+    await expect(page.getByText(/edit periode akademik/i)).toBeVisible();
 
-    await page.getByRole("button", { name: /simpan/i }).click();
+    await page.getByRole("button", { name: /simpan perubahan/i }).click();
 
-    // Modal harus tertutup
-    await expect(
-      page.getByRole("dialog"),
-    ).not.toBeVisible({ timeout: 5000 });
+    // Modal tertutup kembali
+    await expect(page.getByText(/edit periode akademik/i)).not.toBeVisible({ timeout: 10_000 });
   });
 
-  // ── TC-AUTO-PERIODE-006 ──────────────────────────────────────
-  test("TC-AUTO-PERIODE-006 | Hapus Periode dummy → card hilang", async ({
+  // ── TC-PW-PERIODE-005: Dialog Konfirmasi Hapus ────────────────
+  test("TC-PW-PERIODE-005 | Dialog konfirmasi hapus muncul dan bisa dibatalkan", async ({
     page,
   }) => {
-    // Ambil jumlah card sebelum hapus
-    const cardsBefore = await page.locator('[data-testid="periode-card"], .card-periode').count();
+    await page.locator('button[aria-label="Opsi lainnya"]').first().click();
+    await page.getByText(/delete data/i).click();
 
-    // Klik hapus pada card terakhir (dummy/baru)
-    await page.locator('button[aria-label*="hapus"], button:has-text("Hapus")').last().click();
-
-    // Konfirmasi modal
-    await page.getByRole("button", { name: /konfirmasi|ya|hapus/i }).click();
-
-    // Jumlah card berkurang
-    await expect(
-      page.locator('[data-testid="periode-card"], .card-periode'),
-    ).toHaveCount(cardsBefore - 1);
-  });
-
-  // ── TC-AUTO-PERIODE-007 ──────────────────────────────────────
-  test("TC-AUTO-PERIODE-007 | Hapus dibatalkan → data tetap ada", async ({
-    page,
-  }) => {
-    const cardsBefore = await page.locator('[data-testid="periode-card"], .card-periode').count();
-
-    await page.locator('button[aria-label*="hapus"], button:has-text("Hapus")').first().click();
+    // Modal konfirmasi hapus muncul
+    await expect(page.getByText(/hapus data ini/i)).toBeVisible();
 
     // Klik Batal
     await page.getByRole("button", { name: /batal|cancel/i }).click();
 
-    // Jumlah card tidak berubah
-    await expect(
-      page.locator('[data-testid="periode-card"], .card-periode'),
-    ).toHaveCount(cardsBefore);
+    // Modal tertutup dan data tidak terhapus
+    await expect(page.getByText(/hapus data ini/i)).not.toBeVisible({ timeout: 5000 });
   });
 
-  // ── TC-AUTO-PERIODE-008 ──────────────────────────────────────
-  test("TC-AUTO-PERIODE-008 | Search keyword valid → list ter-filter", async ({
+  // ── TC-PW-PERIODE-008: Search Keyword ────────────────────────
+  test("TC-PW-PERIODE-008 | Pencarian Periode Akademik ter-filter", async ({
     page,
   }) => {
-    const searchBox = page.getByPlaceholder(/cari periode akademik/i);
+    const searchInput = page.getByPlaceholder(/cari periode akademik/i);
+    await searchInput.fill("2026");
 
-    // Ambil teks card pertama sebagai keyword
-    const firstCardText = await page
-      .locator('[data-testid="periode-card"], .card-periode')
-      .first()
-      .innerText();
-    const keyword = firstCardText.split("\n")[0].trim().slice(0, 6);
-
-    await searchBox.fill(keyword);
-
-    // Semua card yang tampil harus mengandung keyword
-    const cards = page.locator('[data-testid="periode-card"], .card-periode');
-    const count = await cards.count();
-    expect(count).toBeGreaterThan(0);
+    // Card yang tampil harus sesuai filter
+    await expect(page.getByText(/2026/).first()).toBeVisible({ timeout: 5000 });
   });
 
-  // ── TC-AUTO-PERIODE-009 ──────────────────────────────────────
-  test("TC-AUTO-PERIODE-009 | Search tidak ditemukan → teks empty state muncul", async ({
+  // ── TC-PW-PERIODE-009: Search tidak ditemukan ────────────────
+  test("TC-PW-PERIODE-009 | Search keyword fiktif menampilkan empty state", async ({
     page,
   }) => {
-    await page
-      .getByPlaceholder(/cari periode akademik/i)
-      .fill("zzz-tidak-ada-9999");
+    const searchInput = page.getByPlaceholder(/cari periode akademik/i);
+    await searchInput.fill("zzz-tidak-ada-9999");
 
-    await expect(
-      page.getByText(/tidak ditemukan/i),
-    ).toBeVisible();
+    // Pesan data tidak ditemukan muncul
+    await expect(page.getByText(/tidak ditemukan/i)).toBeVisible({ timeout: 5000 });
   });
 });

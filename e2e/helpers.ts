@@ -1,8 +1,4 @@
-/**
- * Helpers & konstanta yang dipakai bersama semua test SIMATKUL.
- */
-
-export const BASE_URL = "http://localhost:5173";
+import { Page } from "@playwright/test";
 
 export const ADMIN_CREDENTIALS = {
   username: "admin",
@@ -10,21 +6,27 @@ export const ADMIN_CREDENTIALS = {
 };
 
 /**
- * Login sebagai admin dan tunggu redirect ke /master-data.
- * Panggil di `test.beforeEach` untuk test yang butuh sesi login.
+ * Login sebagai Admin melalui UI.
  */
-export async function loginAsAdmin(page: import("@playwright/test").Page) {
+export async function loginAsAdmin(page: Page) {
   await page.goto("/login");
-  await page.getByPlaceholder(/username/i).fill(ADMIN_CREDENTIALS.username);
-  await page.getByPlaceholder(/password/i).fill(ADMIN_CREDENTIALS.password);
-  await page.getByRole("button", { name: /login/i }).click();
+  await page.getByPlaceholder(/masukkan username|username/i).fill(ADMIN_CREDENTIALS.username);
+  await page.getByPlaceholder(/masukkan password|password/i).fill(ADMIN_CREDENTIALS.password);
+  // Gunakan exact: true agar tidak bentrok dengan 'Login as Guest'
+  await page.getByRole("button", { name: "Login", exact: true }).click();
   await page.waitForURL("**/master-data");
 }
 
 /**
- * Hapus semua storage (localStorage + cookies) untuk simulasi guest/logout.
+ * Bersihkan sesi (token & cookies).
  */
-export async function clearSession(page: import("@playwright/test").Page) {
+export async function clearSession(page: Page) {
   await page.context().clearCookies();
-  await page.evaluate(() => localStorage.clear());
+  await page.goto("/login");
+  await page.evaluate(() => {
+    try {
+      localStorage.clear();
+      sessionStorage.clear();
+    } catch (e) {}
+  });
 }
