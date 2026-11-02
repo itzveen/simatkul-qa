@@ -7,19 +7,8 @@ test.describe("Master Data — Periode Akademik", () => {
     await page.waitForURL("**/master-data", { timeout: 15_000 });
   });
 
-  // ── TC-PW-PERIODE-002: Form kosong ───────────────────────────
-  test("TC-PW-PERIODE-002 | Validasi form kosong tidak bisa submit", async ({
-    page,
-  }) => {
-    await page.getByRole("button", { name: "Tambah Periode Akademik" }).click();
-    await page.getByRole("button", { name: "Tambah Periode", exact: true }).click();
-
-    // Dialog modal tetap terbuka karena validasi gagal
-    await expect(page.getByRole("heading", { name: "Tambah periode baru" })).toBeVisible({ timeout: 5000 });
-  });
-
-  // ── TC-PW-PERIODE-003: Tambah periode valid ───────────────────
-  test("TC-PW-PERIODE-003 | Tambah Periode Akademik baru valid", async ({
+  // ── TC-PW-PERIODE-001: Tambah periode valid ───────────────────
+  test("TC-PW-PERIODE-001 | Tambah Periode Akademik baru valid (Mulai Kosong)", async ({
     page,
   }) => {
     const tahunTest = "2099";
@@ -42,8 +31,8 @@ test.describe("Master Data — Periode Akademik", () => {
     await expect(page.getByText(/2099/).first()).toBeVisible({ timeout: 15_000 });
   });
 
-  // ── TC-PW-PERIODE-004: Edit Periode ──────────────────────────
-  test("TC-PW-PERIODE-004 | Edit Periode Akademik existing", async ({
+  // ── TC-PW-PERIODE-002: Edit Periode ──────────────────────────
+  test("TC-PW-PERIODE-002 | Edit data Periode Akademik existing", async ({
     page,
   }) => {
     // Buka menu titik tiga pada card pertama
@@ -59,8 +48,8 @@ test.describe("Master Data — Periode Akademik", () => {
     await expect(page.getByText(/edit periode akademik/i)).not.toBeVisible({ timeout: 10_000 });
   });
 
-  // ── TC-PW-PERIODE-005: Dialog Konfirmasi Hapus ────────────────
-  test("TC-PW-PERIODE-005 | Dialog konfirmasi hapus muncul dan bisa dibatalkan", async ({
+  // ── TC-PW-PERIODE-003: Dialog Konfirmasi Hapus & Batal ────────
+  test("TC-PW-PERIODE-003 | Aksi Batal pada dialog konfirmasi hapus periode", async ({
     page,
   }) => {
     await page.locator('button[aria-label="Opsi lainnya"]').first().click();
@@ -76,8 +65,8 @@ test.describe("Master Data — Periode Akademik", () => {
     await expect(page.getByText(/hapus data ini/i)).not.toBeVisible({ timeout: 5000 });
   });
 
-  // ── TC-PW-PERIODE-008: Search Keyword ────────────────────────
-  test("TC-PW-PERIODE-008 | Pencarian Periode Akademik ter-filter", async ({
+  // ── TC-PW-PERIODE-004: Search Keyword Valid ──────────────────
+  test("TC-PW-PERIODE-004 | Pencarian kartu Periode Akademik dengan keyword valid", async ({
     page,
   }) => {
     const searchInput = page.getByPlaceholder(/cari periode akademik/i);
@@ -87,12 +76,23 @@ test.describe("Master Data — Periode Akademik", () => {
     await expect(page.getByText(/2026/).first()).toBeVisible({ timeout: 5000 });
   });
 
-  // ── TC-PW-PERIODE-009: Search tidak ditemukan ────────────────
-  test("TC-PW-PERIODE-009 | Search keyword fiktif menampilkan empty state", async ({
+  // ── TC-PW-PERIODE-005: Form kosong ───────────────────────────
+  test("TC-PW-PERIODE-005 | Validasi form periode kosong tidak bisa disubmit", async ({
+    page,
+  }) => {
+    await page.getByRole("button", { name: "Tambah Periode Akademik" }).click();
+    await page.getByRole("button", { name: "Tambah Periode", exact: true }).click();
+
+    // Dialog modal tetap terbuka karena validasi gagal
+    await expect(page.getByRole("heading", { name: "Tambah periode baru" })).toBeVisible({ timeout: 5000 });
+  });
+
+  // ── TC-PW-PERIODE-006: Search tidak ditemukan ────────────────
+  test("TC-PW-PERIODE-006 | Pencarian kartu Periode dengan keyword fiktif", async ({
     page,
   }) => {
     const searchInput = page.getByPlaceholder(/cari periode akademik/i);
-    await searchInput.fill("zzz-tidak-ada-9999");
+    await searchInput.fill("XYZ999NONEXISTENT");
 
     // Pesan data tidak ditemukan muncul
     await expect(page.getByText(/tidak ditemukan/i)).toBeVisible({ timeout: 5000 });

@@ -2,8 +2,8 @@ import { test, expect } from "@playwright/test";
 import { loginAsAdmin, clearSession } from "./helpers";
 
 test.describe("Autentikasi", () => {
-  // ── TC-AUTO-AUTH-001 ─────────────────────────────────────────
-  test("TC-AUTO-AUTH-001 | Login berhasil redirect ke /master-data", async ({
+  // ── TC-PW-AUTH-001 ─────────────────────────────────────────
+  test("TC-PW-AUTH-001 | Login Admin dengan kredensial valid", async ({
     page,
   }) => {
     await page.goto("/login");
@@ -15,17 +15,20 @@ test.describe("Autentikasi", () => {
     await expect(page).toHaveURL(/\/master-data/);
   });
 
-  // ── TC-AUTO-AUTH-002 ─────────────────────────────────────────
-  test("TC-AUTO-AUTH-002 | Akses /master-data tanpa login → redirect /login", async ({
-    page,
-  }) => {
+  // ── TC-PW-AUTH-002 ─────────────────────────────────────────
+  test("TC-PW-AUTH-002 | Login sebagai Guest tanpa JWT", async ({ page }) => {
     await clearSession(page);
-    await page.goto("/master-data");
-    await expect(page).toHaveURL(/\/login/);
+    await page.getByRole("button", { name: /login as guest/i }).click();
+
+    await page.waitForURL("**/laporan/dosen", { timeout: 15_000 });
+    await expect(page).toHaveURL(/\/laporan\/dosen/);
+
+    const token = await page.evaluate(() => localStorage.getItem("simatkul_token"));
+    expect(token).toBeNull();
   });
 
-  // ── TC-AUTO-AUTH-004 ─────────────────────────────────────────
-  test("TC-AUTO-AUTH-004 | Logout → redirect /login, token bersih", async ({
+  // ── TC-PW-AUTH-003 ─────────────────────────────────────────
+  test("TC-PW-AUTH-003 | Logout mengakhiri sesi dan hapus token", async ({
     page,
   }) => {
     await loginAsAdmin(page);
@@ -44,8 +47,17 @@ test.describe("Autentikasi", () => {
     expect(token).toBeNull();
   });
 
-  // ── TC-AUTO-AUTH-005 ─────────────────────────────────────────
-  test("TC-AUTO-AUTH-005 | Akses halaman internal setelah logout ditolak", async ({
+  // ── TC-PW-AUTH-004 ─────────────────────────────────────────
+  test("TC-PW-AUTH-004 | Session Guard memblokir akses langsung tanpa login", async ({
+    page,
+  }) => {
+    await clearSession(page);
+    await page.goto("/master-data");
+    await expect(page).toHaveURL(/\/login/);
+  });
+
+  // ── TC-PW-AUTH-005 ─────────────────────────────────────────
+  test("TC-PW-AUTH-005 | Akses halaman internal setelah logout ditolak", async ({
     page,
   }) => {
     await loginAsAdmin(page);
@@ -59,39 +71,39 @@ test.describe("Autentikasi", () => {
     }
     await expect(page).toHaveURL(/\/login/);
 
-    // Coba paksa akses kembali ke halaman master data setelah logout
+    // Coba akses kembali ke halaman master data setelah logout
     await page.goto("/master-data");
-
-    // Sistem wajib menolak dan tetap melempar ke /login
     await expect(page).toHaveURL(/\/login/);
   });
 
-  // ── TC-AUTO-AUTH-006 ─────────────────────────────────────────
-  test("TC-AUTO-AUTH-006 | Login gagal — password salah", async ({ page }) => {
+  // ── TC-PW-AUTH-006 ─────────────────────────────────────────
+  test("TC-PW-AUTH-006 | Login gagal dengan password salah", async ({ page }) => {
     await page.goto("/login");
     await page.getByPlaceholder(/masukkan username|username/i).fill("admin");
-    await page.getByPlaceholder(/masukkan password|password/i).fill("passwordsalah999");
+    await page.getByPlaceholder(/masukkan password|password/i).fill("wrongpassword");
     await page.getByRole("button", { name: "Login", exact: true }).click();
 
     await expect(page).toHaveURL(/\/login/);
-
     await expect(
       page.getByText(/login gagal|invalid|salah|gagal/i).first(),
     ).toBeVisible({ timeout: 10_000 });
   });
 
-  // ── TC-AUTO-AUTH-007 ─────────────────────────────────────────
-  test("TC-AUTO-AUTH-007 | Login gagal — username kosong", async ({ page }) => {
+  // ── TC-PW-AUTH-007 ─────────────────────────────────────────
+  test("TC-PW-AUTH-007 | Login gagal dengan username tidak terdaftar", async ({ page }) => {
     await page.goto("/login");
-    await page.getByPlaceholder(/masukkan password|password/i).fill("admin123");
+    await page.getByPlaceholder(/masukkan username|username/i).fill("unknown_admin");
+    await page.getByPlaceholder(/masukkan password|password/i).fill("password123");
     await page.getByRole("button", { name: "Login", exact: true }).click();
 
     await expect(page).toHaveURL(/\/login/);
-    await expect(page.getByText(/username wajib diisi/i)).toBeVisible();
+    await expect(
+      page.getByText(/login gagal|invalid|salah|gagal/i).first(),
+    ).toBeVisible({ timeout: 10_000 });
   });
 
-  // ── TC-AUTO-AUTH-008 ─────────────────────────────────────────
-  test("TC-AUTO-AUTH-008 | Login gagal — semua field kosong", async ({
+  // ── TC-PW-AUTH-008 ─────────────────────────────────────────
+  test("TC-PW-AUTH-008 | Validasi submit login saat field kosong dicegah", async ({
     page,
   }) => {
     await page.goto("/login");

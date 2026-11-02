@@ -6,8 +6,26 @@ test.describe("Penjadwalan", () => {
     await loginAsAdmin(page);
   });
 
-  // ── TC-PW-JADWAL-004: Dropdown Hari dibatasi Senin s.d. Jumat ─────────
-  test("TC-PW-JADWAL-004 | Dropdown Hari dibatasi Senin s.d. Jumat", async ({
+  // ── TC-PW-JADWAL-001: Preview Penjadwalan ter-render di halaman ────────
+  test("TC-PW-JADWAL-001 | Pilih Periode dan render komponen Preview Matriks Jadwal", async ({
+    page,
+  }) => {
+    await page.goto("/penjadwalan");
+    await expect(
+      page.getByRole("heading", { name: "Penjadwalan" }),
+    ).toBeVisible({ timeout: 15_000 });
+
+    const periodeSelect = page.locator("select").first();
+    await periodeSelect.selectOption({ index: 1 });
+
+    // Preview penjadwalan & toolbar tabel harus tampil di DOM
+    await expect(
+      page.getByPlaceholder(/cari nama mata kuliah/i),
+    ).toBeVisible({ timeout: 10_000 });
+  });
+
+  // ── TC-PW-JADWAL-002: Dropdown Hari dibatasi Senin s.d. Jumat ─────────
+  test("TC-PW-JADWAL-002 | Dropdown Hari dibatasi 5 hari kerja (Senin - Jumat)", async ({
     page,
   }) => {
     await page.goto("/penjadwalan");
@@ -35,8 +53,8 @@ test.describe("Penjadwalan", () => {
     expect(cleanOptions).toEqual(["Senin", "Selasa", "Rabu", "Kamis", "Jumat"]);
   });
 
-  // ── TC-PW-JADWAL-005: Validasi field wajib form jadwal sebelum submit ─
-  test("TC-PW-JADWAL-005 | Validasi field wajib form jadwal sebelum submit", async ({
+  // ── TC-PW-JADWAL-003: Validasi field wajib form jadwal sebelum submit ─
+  test("TC-PW-JADWAL-003 | Validasi field wajib form jadwal sebelum submit", async ({
     page,
   }) => {
     await page.goto("/penjadwalan");
@@ -59,8 +77,8 @@ test.describe("Penjadwalan", () => {
     await expect(page.getByText(/semua field harus diisi/i)).toBeVisible();
   });
 
-  // ── TC-PW-JADWAL-001: Validasi bentrok Dosen pada slot yang sama ───────
-  test("TC-PW-JADWAL-001 | Validasi bentrok jadwal Dosen pada slot yang sama", async ({
+  // ── TC-PW-JADWAL-004: Validasi bentrok Dosen pada slot yang sama ───────
+  test("TC-PW-JADWAL-004 | Validasi bentrok Dosen pada hari dan sesi yang sama", async ({
     page,
   }) => {
     await page.goto("/penjadwalan");
@@ -81,13 +99,12 @@ test.describe("Penjadwalan", () => {
     await page.getByLabel("Sesi").selectOption("1");
 
     // Modal form mengevaluasi slotUsage real-time
-    // Cek dropdown dosen memiliki opsi atau validasi bentrok aktif
     const dosenSelect = page.getByLabel("Dosen");
     await expect(dosenSelect).toBeVisible();
   });
 
-  // ── TC-PW-JADWAL-002: Validasi bentrok Ruangan pada slot yang sama ─────
-  test("TC-PW-JADWAL-002 | Validasi bentrok Ruangan pada slot yang sama", async ({
+  // ── TC-PW-JADWAL-005: Validasi bentrok Ruangan pada slot yang sama ─────
+  test("TC-PW-JADWAL-005 | Validasi bentrok Ruangan pada hari dan sesi yang sama", async ({
     page,
   }) => {
     await page.goto("/penjadwalan");
@@ -110,8 +127,8 @@ test.describe("Penjadwalan", () => {
     await expect(ruangSelect).toBeVisible();
   });
 
-  // ── TC-PW-JADWAL-003: Validasi bentrok Kelas pada slot yang sama ───────
-  test("TC-PW-JADWAL-003 | Validasi bentrok Kelas pada slot yang sama", async ({
+  // ── TC-PW-JADWAL-006: Validasi bentrok Kelas pada slot yang sama ───────
+  test("TC-PW-JADWAL-006 | Validasi bentrok Kelas pada hari dan sesi yang sama", async ({
     page,
   }) => {
     await page.goto("/penjadwalan");
@@ -132,24 +149,6 @@ test.describe("Penjadwalan", () => {
 
     const kelasSelect = page.getByLabel("Kelas");
     await expect(kelasSelect).toBeVisible();
-  });
-
-  // ── TC-PW-JADWAL-006: Preview Penjadwalan ter-render di halaman ────────
-  test("TC-PW-JADWAL-006 | Komponen Preview Matriks Penjadwalan tampil", async ({
-    page,
-  }) => {
-    await page.goto("/penjadwalan");
-    await expect(
-      page.getByRole("heading", { name: "Penjadwalan" }),
-    ).toBeVisible({ timeout: 15_000 });
-
-    const periodeSelect = page.locator("select").first();
-    await periodeSelect.selectOption({ index: 1 });
-
-    // Preview penjadwalan & toolbar tabel harus tampil di DOM
-    await expect(
-      page.getByPlaceholder(/cari nama mata kuliah/i),
-    ).toBeVisible({ timeout: 10_000 });
   });
 });
 

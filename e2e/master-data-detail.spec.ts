@@ -21,10 +21,10 @@ async function goToTab(
 }
 
 // ================================================================
-// MATA KULIAH / KURIKULUM
+// MATA KULIAH / KURIKULUM (4 TC)
 // ================================================================
 test.describe("Master Data — Mata Kuliah", () => {
-  test("TC-PW-KURIKULUM-001 | Membuka tab Mata Kuliah — tabel tampil", async ({
+  test("TC-PW-MK-001 | Membuka tab Kurikulum dan menampilkan struktur tabel", async ({
     page,
   }) => {
     await goToTab(page, "Kurikulum");
@@ -32,7 +32,23 @@ test.describe("Master Data — Mata Kuliah", () => {
     await expect(page.getByRole("table")).toBeVisible();
   });
 
-  test("TC-PW-KURIKULUM-004 | Tambah MK field wajib kosong dicegah submit", async ({
+  test("TC-PW-MK-002 | Tambah Mata Kuliah baru dengan field valid", async ({
+    page,
+  }) => {
+    await goToTab(page, "Kurikulum");
+    await page.getByRole("button", { name: "Tambah Mata Kuliah" }).click();
+
+    const uniqueKode = String(Math.floor(1000 + Math.random() * 9000));
+    await page.getByPlaceholder(/contoh: Bahasa Inggris 1/i).fill("Basis Data Terdistribusi QA");
+    await page.getByPlaceholder(/contoh: 101/i).fill(uniqueKode);
+    await page.getByPlaceholder(/contoh: 2/i).fill("3");
+    await page.getByRole("button", { name: "Tambah Mata Kuliah", exact: true }).last().click();
+
+    // Verifikasi MK baru muncul di tabel
+    await expect(page.getByText("Basis Data Terdistribusi QA").first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test("TC-PW-MK-003 | Validasi submit Mata Kuliah dengan field wajib kosong", async ({
     page,
   }) => {
     await goToTab(page, "Kurikulum");
@@ -44,7 +60,7 @@ test.describe("Master Data — Mata Kuliah", () => {
     ).toBeVisible();
   });
 
-  test("TC-PW-KURIKULUM-005 | Validasi bobot SKS tidak boleh angka di luar batas", async ({
+  test("TC-PW-MK-004 | Validasi Bobot SKS di luar batas maksimum (> 10)", async ({
     page,
   }) => {
     await goToTab(page, "Kurikulum");
@@ -63,10 +79,20 @@ test.describe("Master Data — Mata Kuliah", () => {
 });
 
 // ================================================================
-// RUANGAN
+// RUANGAN (2 TC)
 // ================================================================
 test.describe("Master Data — Ruangan", () => {
-  test("TC-PW-RUANGAN-001 | Validasi nama ruangan tidak boleh kosong", async ({
+  test("TC-PW-RUANG-001 | Tambah Ruangan baru dengan nama valid", async ({ page }) => {
+    await goToTab(page, "Ruangan");
+    await page.getByRole("button", { name: /tambah ruang/i }).click();
+    await page.getByPlaceholder(/contoh: CU 205/i).fill("Lab PW Automation");
+    await page.getByRole("button", { name: "Tambah Ruangan", exact: true }).last().click();
+
+    // Baris baru muncul di tabel
+    await expect(page.getByText("Lab PW Automation").first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test("TC-PW-RUANG-002 | Validasi nama ruangan kosong ditolak", async ({
     page,
   }) => {
     await goToTab(page, "Ruangan");
@@ -77,23 +103,24 @@ test.describe("Master Data — Ruangan", () => {
       page.getByText(/nama ruangan tidak boleh kosong/i),
     ).toBeVisible();
   });
-
-  test("TC-PW-RUANGAN-002 | Tambah ruangan baru valid", async ({ page }) => {
-    await goToTab(page, "Ruangan");
-    await page.getByRole("button", { name: /tambah ruang/i }).click();
-    await page.getByPlaceholder(/contoh: CU 205/i).fill("Lab PW Automation");
-    await page.getByRole("button", { name: "Tambah Ruangan", exact: true }).last().click();
-
-    // Baris baru muncul di tabel
-    await expect(page.getByText("Lab PW Automation").first()).toBeVisible({ timeout: 15_000 });
-  });
 });
 
 // ================================================================
-// DOSEN
+// DOSEN (2 TC)
 // ================================================================
 test.describe("Master Data — Dosen", () => {
-  test("TC-PW-DOSEN-001 | Validasi nama dosen tidak boleh kosong", async ({
+  test("TC-PW-DOSEN-001 | Tambah Dosen baru dengan data valid", async ({ page }) => {
+    await goToTab(page, "Dosen");
+    await page.getByRole("button", { name: "Tambah Dosen" }).click();
+    await page.getByPlaceholder(/masukan nama lengkap dosen/i).fill("Dr. QA Engineer");
+    await page.getByPlaceholder(/masukan NIDN dosen/i).fill("12345678");
+    await page.getByPlaceholder(/contoh: Lektor/i).fill("Lektor Kepala");
+    await page.getByRole("button", { name: "Tambah Dosen", exact: true }).last().click();
+
+    await expect(page.getByText("Dr. QA Engineer").first()).toBeVisible({ timeout: 15_000 });
+  });
+
+  test("TC-PW-DOSEN-002 | Validasi nama dosen kosong ditolak", async ({
     page,
   }) => {
     await goToTab(page, "Dosen");
@@ -104,24 +131,21 @@ test.describe("Master Data — Dosen", () => {
       page.getByText(/nama dosen tidak boleh kosong/i),
     ).toBeVisible();
   });
-
-  test("TC-PW-DOSEN-002 | Tambah dosen baru valid", async ({ page }) => {
-    await goToTab(page, "Dosen");
-    await page.getByRole("button", { name: "Tambah Dosen" }).click();
-    await page.getByPlaceholder(/masukan nama lengkap dosen/i).fill("Dosen Test Playwright");
-    await page.getByPlaceholder(/masukan NIDN dosen/i).fill("12345678");
-    await page.getByPlaceholder(/contoh: Lektor/i).fill("Lektor Kepala");
-    await page.getByRole("button", { name: "Tambah Dosen", exact: true }).last().click();
-
-    await expect(page.getByText("Dosen Test Playwright").first()).toBeVisible({ timeout: 15_000 });
-  });
 });
 
 // ================================================================
-// KELAS
+// KELAS (2 TC)
 // ================================================================
 test.describe("Master Data — Kelas", () => {
-  test("TC-PW-KELAS-001 | Validasi form kelas wajib memilih semester", async ({
+  test("TC-PW-KELAS-001 | Tampilan tabel Kelas dan filter Program Studi", async ({
+    page,
+  }) => {
+    await goToTab(page, "Kelas");
+    // Tab filter prodi tampil di toolbar
+    await expect(page.getByRole("button", { name: "TRPL", exact: true })).toBeVisible();
+  });
+
+  test("TC-PW-KELAS-002 | Validasi form kelas wajib memilih semester", async ({
     page,
   }) => {
     await goToTab(page, "Kelas");
@@ -135,16 +159,22 @@ test.describe("Master Data — Kelas", () => {
 });
 
 // ================================================================
-// SESI
+// SESI (3 TC)
 // ================================================================
 test.describe("Master Data — Sesi", () => {
-  test("TC-PW-SESI-001 | Validasi jam mulai lebih lambat dari jam akhir ditolak", async ({
+  test("TC-PW-SESI-001 | Tampilan daftar slot waktu sesi perkuliahan", async ({
+    page,
+  }) => {
+    await goToTab(page, "Sesi");
+    await expect(page.getByRole("table")).toBeVisible();
+  });
+
+  test("TC-PW-SESI-002 | Validasi logika jam mulai lebih lambat dari jam akhir", async ({
     page,
   }) => {
     await goToTab(page, "Sesi");
     await page.getByRole("button", { name: "Tambah Sesi" }).click();
 
-    // Ambil kedua input jam di modal form secara berurutan
     const timeInputs = page.locator('input[placeholder="00.00 WIB"]');
     await timeInputs.nth(0).fill("10.00 WIB");
     await timeInputs.nth(1).fill("08.00 WIB");
@@ -156,7 +186,7 @@ test.describe("Master Data — Sesi", () => {
     ).toBeVisible();
   });
 
-  test("TC-PW-SESI-002 | Validasi format jam salah ditolak", async ({
+  test("TC-PW-SESI-003 | Validasi format jam tidak valid ditolak", async ({
     page,
   }) => {
     await goToTab(page, "Sesi");
@@ -171,20 +201,5 @@ test.describe("Master Data — Sesi", () => {
     await expect(
       page.getByText(/format jam mulai tidak valid/i),
     ).toBeVisible();
-  });
-});
-
-// ================================================================
-// HAK AKSES GUEST
-// ================================================================
-test.describe("Hak Akses Guest", () => {
-  test("TC-PW-HASIL-003 | Login as Guest berhasil diarahkan ke laporan", async ({
-    page,
-  }) => {
-    await page.goto("/login");
-    await page.getByRole("button", { name: /login as guest/i }).click();
-
-    await page.waitForURL("**/laporan/dosen", { timeout: 10_000 });
-    await expect(page).toHaveURL(/laporan\/dosen/);
   });
 });
