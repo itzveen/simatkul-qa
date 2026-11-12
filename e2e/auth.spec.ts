@@ -1,5 +1,5 @@
-import { test, expect } from "@playwright/test";
-import { loginAsAdmin, clearSession } from "./helpers";
+import { test, expect } from "./fixtures";
+import { loginAsAdmin, clearSession, submitLogin } from "./helpers";
 
 test.describe("Autentikasi", () => {
   // ── TC-PW-AUTH-001 ─────────────────────────────────────────
@@ -9,7 +9,7 @@ test.describe("Autentikasi", () => {
     await page.goto("/login");
     await page.getByPlaceholder(/masukkan username|username/i).fill("admin");
     await page.getByPlaceholder(/masukkan password|password/i).fill("admin123");
-    await page.getByRole("button", { name: "Login", exact: true }).click();
+    await submitLogin(page, 200);
 
     await page.waitForURL("**/master-data", { timeout: 15_000 });
     await expect(page).toHaveURL(/\/master-data/);
@@ -81,7 +81,7 @@ test.describe("Autentikasi", () => {
     await page.goto("/login");
     await page.getByPlaceholder(/masukkan username|username/i).fill("admin");
     await page.getByPlaceholder(/masukkan password|password/i).fill("wrongpassword");
-    await page.getByRole("button", { name: "Login", exact: true }).click();
+    await submitLogin(page, 401);
 
     await expect(page).toHaveURL(/\/login/);
     await expect(
@@ -94,7 +94,7 @@ test.describe("Autentikasi", () => {
     await page.goto("/login");
     await page.getByPlaceholder(/masukkan username|username/i).fill("unknown_admin");
     await page.getByPlaceholder(/masukkan password|password/i).fill("password123");
-    await page.getByRole("button", { name: "Login", exact: true }).click();
+    await submitLogin(page, 401);
 
     await expect(page).toHaveURL(/\/login/);
     await expect(

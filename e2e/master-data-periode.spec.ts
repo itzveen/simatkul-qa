@@ -1,100 +1,64 @@
-import { test, expect } from "@playwright/test";
-import { loginAsAdmin } from "./helpers";
+import { test, expect } from './fixtures';
+import { loginAsAdmin } from './helpers';
+import { mutation } from './qa-data';
 
-test.describe("Master Data — Periode Akademik", () => {
-  test.beforeEach(async ({ page }) => {
-    await loginAsAdmin(page);
-    await page.waitForURL("**/master-data", { timeout: 15_000 });
+test.describe('Master Data — Periode Akademik', () => {
+  test.beforeEach(async ({ page }) => { await loginAsAdmin(page); });
+  test('TC-PW-PERIODE-001 | Tambah periode kosong tersimpan setelah reload', async ({ page, qa }) => {
+    await page.getByRole('button', { name: 'Tambah Periode Akademik' }).click();
+    await page.getByPlaceholder(/contoh: 2026/i).fill('2098');
+    await page.getByLabel('Semester', { exact: true }).selectOption('Ganjil');
+    await page.getByPlaceholder(/contoh: Draft 1/i).fill(qa.tag);
+    await page.getByRole('button', { name: /mulai kosong/i }).click();
+    const body = await mutation(page, 'POST', '/api/master-data/kurikulum', () => page.getByRole('button', { name: 'Tambah Periode', exact: true }).click());
+    qa.periods.add(Number(body.data.id));
+    const p = await qa.call("GET", `/api/master-data/kurikulum/${body.data.id}`);
+    await page.reload();
+    await expect(page.getByText(p.nama, { exact: true })).toBeVisible();
+    expect((await qa.call('GET', `/api/master-data/kurikulum/${body.data.id}`)).description).toBe(qa.tag);
   });
-
-  // ── TC-PW-PERIODE-001: Tambah periode valid ───────────────────
-  test("TC-PW-PERIODE-001 | Tambah Periode Akademik baru valid (Mulai Kosong)", async ({
-    page,
-  }) => {
-    const tahunTest = "2099";
-
-    await page.getByRole("button", { name: "Tambah Periode Akademik" }).click();
-
-    // 1. Isi Awal Tahun
-    await page.getByPlaceholder(/contoh: 2026/i).fill(tahunTest);
-
-    // 2. Pilih Semester Ganjil
-    await page.locator("select").first().selectOption("Ganjil");
-
-    // 3. PENTING: Klik opsi 'Mulai kosong' agar tidak mewajibkan dropdown periode sumber
-    await page.getByRole("button", { name: /mulai kosong/i }).click();
-
-    // 4. Klik Tambah Periode
-    await page.getByRole("button", { name: "Tambah Periode", exact: true }).click();
-
-    // Modal tertutup dan card baru 2099 muncul di halaman
-    await expect(page.getByText(/2099/).first()).toBeVisible({ timeout: 15_000 });
-  });
-
-  // ── TC-PW-PERIODE-002: Edit Periode ──────────────────────────
-  test("TC-PW-PERIODE-002 | Edit data Periode Akademik existing", async ({
-    page,
-  }) => {
-    // Buka menu titik tiga pada card pertama
-    await page.locator('button[aria-label="Opsi lainnya"]').first().click();
+  test('TC-PW-PERIODE-002 | Edit nilai periode dan verifikasi persistence', async ({ page, qa }) => {
+    const p = await qa.period();
+    await page.reload();
+    const card = page.locator('div').filter({ has: page.getByText(p.nama, { exact: true }) }).filter({ has: page.locator('button[aria-label="Opsi lainnya"]') }).last();
+    await card.getByRole('button', { name: 'Opsi lainnya' }).click();
     await page.getByText(/edit data/i).click();
-
-    // Modal Edit terbuka
-    await expect(page.getByText(/edit periode akademik/i)).toBeVisible();
-
-    await page.getByRole("button", { name: /simpan perubahan/i }).click();
-
-    // Modal tertutup kembali
-    await expect(page.getByText(/edit periode akademik/i)).not.toBeVisible({ timeout: 10_000 });
+    await page.getByPlaceholder(/contoh: Draft 1/i).fill(qa.tag + '-edited');
+    await page.getByLabel('Semester', { exact: true }).selectOption('Genap');
+    await mutation(page, 'PUT', `/api/master-data/kurikulum/${p.id}`, () => page.getByRole('button', { name: /simpan perubahan/i }).click());
+    await page.reload();
+    const updated = await qa.call('GET', `/api/master-data/kurikulum/${p.id}`);
+    await expect(page.getByText(updated.nama, { exact: true })).toBeVisible();
+    expect(updated.semester).toBe('Genap');
+    expect((await qa.call('GET', `/api/master-data/kurikulum/${p.id}`)).description).toBe(qa.tag + '-edited');
   });
-
-  // ── TC-PW-PERIODE-003: Dialog Konfirmasi Hapus & Batal ────────
-  test("TC-PW-PERIODE-003 | Aksi Batal pada dialog konfirmasi hapus periode", async ({
-    page,
-  }) => {
-    await page.locator('button[aria-label="Opsi lainnya"]').first().click();
+  test('TC-PW-PERIODE-003 | Batal hapus mempertahankan data periode', async ({ page, qa }) => {
+    const p = await qa.period();
+    await page.reload();
+    const card = page.locator('div').filter({ has: page.getByText(p.nama, { exact: true }) }).filter({ has: page.locator('button[aria-label="Opsi lainnya"]') }).last();
+    await card.getByRole('button', { name: 'Opsi lainnya' }).click();
     await page.getByText(/delete data/i).click();
-
-    // Modal konfirmasi hapus muncul
     await expect(page.getByText(/hapus data ini/i)).toBeVisible();
-
-    // Klik Batal
-    await page.getByRole("button", { name: /batal|cancel/i }).click();
-
-    // Modal tertutup dan data tidak terhapus
-    await expect(page.getByText(/hapus data ini/i)).not.toBeVisible({ timeout: 5000 });
+    await page.getByRole('button', { name: /batal/i }).click();
+    await page.reload();
+    await expect(page.getByText(p.nama, { exact: true })).toBeVisible();
+    expect((await qa.call('GET', `/api/master-data/kurikulum/${p.id}`)).id).toBe(p.id);
   });
-
-  // ── TC-PW-PERIODE-004: Search Keyword Valid ──────────────────
-  test("TC-PW-PERIODE-004 | Pencarian kartu Periode Akademik dengan keyword valid", async ({
-    page,
-  }) => {
-    const searchInput = page.getByPlaceholder(/cari periode akademik/i);
-    await searchInput.fill("2026");
-
-    // Card yang tampil harus sesuai filter
-    await expect(page.getByText(/2026/).first()).toBeVisible({ timeout: 5000 });
+  test('TC-PW-PERIODE-004 | Search periode memfilter seluruh kartu', async ({ page, qa }) => {
+    const p = await qa.period();
+    await page.reload();
+    await page.getByPlaceholder(/cari periode akademik/i).fill(p.nama);
+    await expect(page.getByText(p.nama, { exact: true })).toBeVisible();
+    await expect(page.locator('button[aria-label="Buka periode"]')).toHaveCount(1);
   });
-
-  // ── TC-PW-PERIODE-005: Form kosong ───────────────────────────
-  test("TC-PW-PERIODE-005 | Validasi form periode kosong tidak bisa disubmit", async ({
-    page,
-  }) => {
-    await page.getByRole("button", { name: "Tambah Periode Akademik" }).click();
-    await page.getByRole("button", { name: "Tambah Periode", exact: true }).click();
-
-    // Dialog modal tetap terbuka karena validasi gagal
-    await expect(page.getByRole("heading", { name: "Tambah periode baru" })).toBeVisible({ timeout: 5000 });
+  test('TC-PW-PERIODE-005 | Form periode kosong ditolak', async ({ page }) => {
+    await page.getByRole('button', { name: 'Tambah Periode Akademik' }).click();
+    await page.getByRole('button', { name: 'Tambah Periode', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Tambah periode baru' })).toBeVisible();
   });
-
-  // ── TC-PW-PERIODE-006: Search tidak ditemukan ────────────────
-  test("TC-PW-PERIODE-006 | Pencarian kartu Periode dengan keyword fiktif", async ({
-    page,
-  }) => {
-    const searchInput = page.getByPlaceholder(/cari periode akademik/i);
-    await searchInput.fill("XYZ999NONEXISTENT");
-
-    // Pesan data tidak ditemukan muncul
-    await expect(page.getByText(/tidak ditemukan/i)).toBeVisible({ timeout: 5000 });
+  test('TC-PW-PERIODE-006 | Search periode fiktif menampilkan empty state', async ({ page }) => {
+    await page.getByPlaceholder(/cari periode akademik/i).fill('XYZ999NONEXISTENT');
+    await expect(page.getByText(/tidak ditemukan/i)).toBeVisible();
+    await expect(page.locator('button[aria-label="Buka periode"]')).toHaveCount(0);
   });
 });

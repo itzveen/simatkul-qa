@@ -8,12 +8,13 @@ import { defineConfig, devices } from "@playwright/test";
  */
 export default defineConfig({
   testDir: "./e2e",
+  timeout: 90_000,
 
   /* Jalankan semua test secara paralel */
   fullyParallel: false,
 
   /* Gagalkan CI kalau ada test.only yang tertinggal */
-  forbidOnly: !!process.env.CI,
+  forbidOnly: true,
 
   /* Retry 1x di CI jika gagal */
   retries: process.env.CI ? 1 : 0,
@@ -22,17 +23,20 @@ export default defineConfig({
   workers: 1,
 
   /* Format laporan: HTML (buka dengan npx playwright show-report) */
-  reporter: [["html", { outputFolder: "playwright-report", open: "never" }]],
+  reporter: [["list"], ["html", { outputFolder: "playwright-report", open: "never" }], ["json", { outputFile: "test-results/results.json" }]],
 
   use: {
     /* Base URL FE dev server */
-    baseURL: "http://localhost:5173",
+    baseURL: process.env.BASE_URL || "http://localhost:5173",
 
     /* Simpan trace saat retry */
-    trace: "on-first-retry",
+    trace: "on",
 
-    /* Screenshot saat gagal */
-    screenshot: "only-on-failure",
+    /* Screenshot di akhir setiap test (untuk bukti weekly report) */
+    screenshot: "on",
+
+    /* Rekam video setiap test (untuk bukti weekly report) */
+    video: "on",
 
     /* Timeout per action */
     actionTimeout: 10_000,
@@ -45,11 +49,12 @@ export default defineConfig({
     },
   ],
 
-  /* Jalankan FE dev server otomatis sebelum test */
-  webServer: {
-    command: "npm run dev",
-    url: "http://localhost:5173",
-    reuseExistingServer: true,
+  // Repo QA tidak memiliki script dev. Server opsional harus ditentukan eksplisit.
+  webServer: process.env.FE_DIR ? {
+    command: process.env.FE_COMMAND || "npm run dev -- --host 127.0.0.1 --port 5173 --strictPort",
+    cwd: process.env.FE_DIR,
+    url: process.env.BASE_URL || "http://localhost:5173",
+    reuseExistingServer: !process.env.CI,
     timeout: 30_000,
-  },
+  } : undefined,
 });
