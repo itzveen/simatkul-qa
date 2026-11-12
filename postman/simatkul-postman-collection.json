@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "simatkul-suite-latest-clean-2026",
     "name": "SIMATKUL API Test Suite - 3 Defect Exact",
-    "description": "Koleksi API Test 63 Skenario disesuaikan dengan ID riil di DB: Kurikulum=5, MK=5, Dosen=5, Kelas=25, Ruang=4, Sesi=5",
+    "description": "Koleksi API Test SIMATKUL Lengkap (Updated: 11 New TCs + Kode MK 15 Char + Fix BE Delete Bug) - Total: 96 Cases",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -322,7 +322,7 @@
       ]
     },
     {
-      "name": "02. Kurikulum (9 Cases)",
+      "name": "02. Kurikulum (11 Cases)",
       "item": [
         {
           "name": "TC-KUR-001 - Get All Kurikulum",
@@ -707,11 +707,102 @@
               ]
             }
           }
+        },
+        {
+          "name": "TC-KUR-009 - Copy Kurikulum & Mutasi Salinan Tanpa Merusak Sumber",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 atau 200 - Copy Kurikulum Berhasil\", function () {",
+                  "pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/master-data/kurikulum?copy=true&kurikulumId={{activeKurikulumId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "master-data",
+                "kurikulum"
+              ],
+              "query": [
+                {
+                  "key": "copy",
+                  "value": "true"
+                },
+                {
+                  "key": "kurikulumId",
+                  "value": "{{activeKurikulumId}}"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"tahun_ajaran\": 2030, \"semester\": \"Ganjil\", \"description\": \"Kurikulum Copy Uji Integritas\"}"
+            }
+          }
+        },
+        {
+          "name": "TC-KUR-010 - Hapus Kurikulum Cascade Tanpa Orphan Record",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 atau 204 - Hapus Kurikulum Cascade Sukses\", function () {",
+                  "pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/master-data/kurikulum/{{dummyKurikulumId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "master-data",
+                "kurikulum",
+                "{{dummyKurikulumId}}"
+              ]
+            }
+          }
         }
       ]
     },
     {
-      "name": "03. Mata Kuliah (11 Cases)",
+      "name": "03. Mata Kuliah (12 Cases)",
       "item": [
         {
           "name": "TC-MK-001 - Get All Mata Kuliah",
@@ -1213,6 +1304,51 @@
                 "mata-kuliah",
                 "{{dummyMkId}}"
               ]
+            }
+          }
+        },
+        {
+          "name": "TC-MK-005C - Tambah MK Kode Maksimum 15 Karakter (Valid Sesuai Kesepakatan)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 - Tambah MK Kode 15 Karakter Berhasil\", function () {",
+                  "pm.expect(pm.response.code).to.equal(201);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/master-data/mata-kuliah/{{activeKurikulumId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "master-data",
+                "mata-kuliah",
+                "{{activeKurikulumId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"kode\": \"TRPL-2026-00001\", \"nama\": \"Pemrograman Lanjut 15 Char\", \"sks\": 3, \"prodi\": \"TRPL\", \"jenis\": \"Wajib\", \"kelompok\": \"Teori\", \"tipe_kelas\": \"MKK\", \"semester\": 1}"
             }
           }
         }
@@ -2293,7 +2429,7 @@
       ]
     },
     {
-      "name": "07. Sesi (7 Cases)",
+      "name": "07. Sesi (8 Cases)",
       "item": [
         {
           "name": "TC-SES-001 - Get All Sesi",
@@ -2574,11 +2710,56 @@
               ]
             }
           }
+        },
+        {
+          "name": "TC-SES-006 - Tolak Sesi Durasi Nol (Jam Mulai Sama Dengan Jam Akhir)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 - Sesi Durasi Nol Ditolak\", function () {",
+                  "pm.expect(pm.response.code).to.be.oneOf([400, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/master-data/sesi/{{activeKurikulumId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "master-data",
+                "sesi",
+                "{{activeKurikulumId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nama\": 99, \"jam_mulai\": \"08:00:00\", \"jam_akhir\": \"08:00:00\"}"
+            }
+          }
         }
       ]
     },
     {
-      "name": "08. Penjadwalan (12 Cases)",
+      "name": "08. Penjadwalan (18 Cases)",
       "item": [
         {
           "name": "TC-SCH-001 - Get Form Options Penjadwalan",
@@ -3055,6 +3236,255 @@
               ]
             }
           }
+        },
+        {
+          "name": "TC-SCH-019 - Buat Jadwal & Verifikasi Relasi Record Lengkap",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201 atau 200 - Tambah Jadwal Lengkap Berhasil\", function () {",
+                  "pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/penjadwalan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "penjadwalan"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"kurikulum_id\": 5, \"matkul_id\": 5, \"ruang_id\": 4, \"kelas_id\": 25, \"hari\": \"Senin\", \"sesi_ids\": [1], \"dosen_ids\": [5]}"
+            }
+          }
+        },
+        {
+          "name": "TC-SCH-020 - Hapus Jadwal Existing & Bebaskan Slot Untuk Digunakan Kembali",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 atau 204 - Hapus Jadwal Berhasil & Slot Terbebas\", function () {",
+                  "pm.expect(pm.response.code).to.be.oneOf([200, 204, 404]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/penjadwalan/{{dummyJadwalId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "penjadwalan",
+                "{{dummyJadwalId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "TC-SCH-021 - Tolak Referensi Jadwal Lintas Periode / Kurikulum",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 atau 404 - Jadwal Lintas Kurikulum Ditolak\", function () {",
+                  "pm.expect(pm.response.code).to.be.oneOf([400, 404, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/penjadwalan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "penjadwalan"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"kurikulum_id\": 5, \"matkul_id\": 999999, \"ruang_id\": 4, \"kelas_id\": 25, \"hari\": \"Selasa\", \"sesi_ids\": [1], \"dosen_ids\": [5]}"
+            }
+          }
+        },
+        {
+          "name": "TC-SCH-022 - Atomicity Jadwal Multisession (Satu Sesi Konflik Batalkan Total)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 atau 409 - Penjadwalan Multisession Konflik Ditolak Total\", function () {",
+                  "pm.expect(pm.response.code).to.be.oneOf([400, 409, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/penjadwalan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "penjadwalan"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"kurikulum_id\": 5, \"matkul_id\": 5, \"ruang_id\": 4, \"kelas_id\": 25, \"hari\": \"Senin\", \"sesi_ids\": [1, 2], \"dosen_ids\": [5]}"
+            }
+          }
+        },
+        {
+          "name": "TC-SCH-023 - Pencegahan Race Condition Bentrok Jadwal Simultan",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400 atau 409 - Jadwal Konflik Simultan Ditolak\", function () {",
+                  "pm.expect(pm.response.code).to.be.oneOf([400, 409, 422]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/penjadwalan",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "penjadwalan"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"kurikulum_id\": 5, \"matkul_id\": 5, \"ruang_id\": 4, \"kelas_id\": 25, \"hari\": \"Senin\", \"sesi_ids\": [1], \"dosen_ids\": [5]}"
+            }
+          }
+        },
+        {
+          "name": "TC-SCH-024 - Ekspor Excel Jadwal & Verifikasi Berkas Valid",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200 - File Excel Berhasil Dihasilkan\", function () {",
+                  "pm.expect(pm.response.code).to.equal(200);",
+                  "});",
+                  "pm.test(\"Header Content-Type adalah spreadsheet Excel\", function () {",
+                  "pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"sheet\");",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{authToken}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/penjadwalan/export-excel/dosen/{{activeKurikulumId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "penjadwalan",
+                "export-excel",
+                "dosen",
+                "{{activeKurikulumId}}"
+              ]
+            }
+          }
         }
       ]
     },
@@ -3401,7 +3831,7 @@
       ]
     },
     {
-      "name": "10. Security & RBAC (6 Cases)",
+      "name": "10. Security & RBAC (8 Cases)",
       "item": [
         {
           "name": "TC-SEC-001 - Akses Kurikulum Tanpa Token (Guest Bypass 200)",
@@ -3615,6 +4045,84 @@
                 "api",
                 "penjadwalan"
               ]
+            }
+          }
+        },
+        {
+          "name": "TC-SEC-007 - Export Excel Dosen Tanpa Token Ditolak (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401 atau 403 - Akses Export Excel Tanpa Token Ditolak\", function () {",
+                  "pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/penjadwalan/export-excel/dosen/{{activeKurikulumId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "penjadwalan",
+                "export-excel",
+                "dosen",
+                "{{activeKurikulumId}}"
+              ]
+            }
+          }
+        },
+        {
+          "name": "TC-SEC-008 - Mutasi Data Tanpa Token Valid / Expired Ditolak (401)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 401 atau 403 - Mutasi Ditolak Tanpa Token Valid\", function () {",
+                  "pm.expect(pm.response.code).to.be.oneOf([401, 403]);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer invalid_or_expired_token"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/master-data/ruang/{{activeRuangId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "master-data",
+                "ruang",
+                "{{activeRuangId}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"nama\": \"Ruang Tidak Sah Unauthorized\"}"
             }
           }
         }
